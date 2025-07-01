@@ -7,12 +7,15 @@ from db.models import GuildConfigDB
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+TEST_GUILD_ID = 1389539957265399939  # <-- put your server's ID here
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
     try:
-        synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} commands.")
+        guild = discord.Object(id=TEST_GUILD_ID)
+        synced = await bot.tree.sync(guild=guild)
+        print(f"Synced {len(synced)} commands to test guild.")
     except Exception as e:
         print(f"Failed to sync commands: {e}")
 
