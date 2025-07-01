@@ -17,7 +17,9 @@ async def setup_db():
 
 async def main():
     await setup_db()
-    await bot.load_extension("cogs.config")  # load our config cog
+    await bot.load_extension("cogs.config")
+    await bot.load_extension("cogs.onboarding")
+    # (load other cogs as you add them)
     await bot.start(os.getenv("DISCORD_TOKEN"))
 
 if __name__ == "__main__":
