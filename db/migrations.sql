@@ -5,3 +5,5 @@ CREATE TABLE IF NOT EXISTS guild_configs (
     created_at TIMESTAMP DEFAULT now()
 );
 
+ALTER TABLE guild_configs ADD COLUMN IF NOT EXISTS onboarding_category BIGINT;
+
