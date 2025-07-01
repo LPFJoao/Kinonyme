@@ -1,0 +1,5 @@
+asyncpg
+apscheduler
+discord.py
+python-dotenv
+pytz
