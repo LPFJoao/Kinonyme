@@ -7,7 +7,7 @@ from db.models import GuildConfigDB
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-TEST_GUILD_ID = 1389539957265399939  # <-- put your server's ID here
+TEST_GUILD_ID = 1389539957265399939 
 
 @bot.event
 async def on_ready():
