@@ -27,6 +27,13 @@ async def main():
     await setup_db()
     await bot.load_extension("cogs.config")
     await bot.load_extension("cogs.onboarding")
+    await bot.load_extension("cogs.GuildMemberCommand")
+    await bot.load_extension("cogs.BossTimerRoleCog")
+    await bot.load_extension("cogs.CommandDrops")
+    await bot.load_extension("cogs.BossScheduleCog")
+    await bot.load_extension("cogs.WeeklyGuideBoss")
+    await bot.load_extension("cogs.BossReminderCogs")
+    await bot.load_extension("cogs.GuildStatsCommand")
     # (load other cogs as you add them)
     await bot.start(os.getenv("DISCORD_TOKEN"))
 
