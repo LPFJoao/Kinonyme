@@ -189,7 +189,7 @@ class GuildMemberGear(commands.Cog):
                 embed.add_field(name="Class", value=member['class'])
                 embed.add_field(name="Main", value=member['main_hand'])
                 embed.add_field(name="Offhand", value=member['offhand'])
-                embed.add_field(name="Game Capture", value=member['game_capture'])
+                embed.set_image(url=member["game_capture"])
                 if member.get('avatar'):
                     embed.set_thumbnail(url=member['avatar'])
                 await interaction.response.send_message(embed=embed)
