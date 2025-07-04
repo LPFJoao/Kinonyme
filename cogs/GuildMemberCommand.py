@@ -7,7 +7,7 @@ import logging
 
 # List of valid weapons
 VALID_WEAPONS = [
-    "Staff", "Daggers", "SnS", "Greatsword", "Long Bow", "Crossbow", "Wand", "Spear",
+    "Staff", "Dagger", "SwordAndShield", "Greatsword", "Long Bow", "Crossbow", "WandAndTome",
 ]
 
 # Setup logging
@@ -50,12 +50,14 @@ class PagedGuildMembersView(discord.ui.View):
             classe = member['class']
             main_hand = member['main_hand']
             offhand = member['offhand']
+            game_capture = member["game_capture"]
             value = (
                 f"**Gear Score:** {gear_score}\n"
                 f"**Class:** {emoji} {classe}\n"
                 f"**Main:** {main_hand} | **Offhand:** {offhand}"
             )
             embed.add_field(name=f"{emoji} {name}", value=value, inline=False)
+            embed.add_field(name="Game Capture", value=member['game_capture'])
 
         embed.set_footer(text=f"Use the buttons to navigate pages.")
         return embed, None
@@ -80,15 +82,15 @@ class GuildMemberGear(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def add_member_db(self, discord_id, guild_id, ingame_name, gear_score, guild_class, main_hand, offhand, avatar_url):
+    async def add_member_db(self, discord_id, guild_id, ingame_name, gear_score, guild_class, main_hand, offhand, avatar_url, game_capture):
         try:
             query = """
-                INSERT INTO guild_members (discord_id, guild_id, ingame_name, gear_score, class, main_hand, offhand, avatar)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                INSERT INTO guild_members (discord_id, guild_id, ingame_name, gear_score, class, main_hand, offhand, avatar, game_capture)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 ON CONFLICT (discord_id, guild_id)
-                DO UPDATE SET ingame_name = $3, gear_score = $4, class = $5, main_hand = $6, offhand = $7, avatar = $8
+                DO UPDATE SET ingame_name = $3, gear_score = $4, class = $5, main_hand = $6, offhand = $7, avatar = $8, game_capture = $9
             """
-            await self.bot.db.pool.execute(query, str(discord_id), guild_id, ingame_name, gear_score, guild_class, main_hand, offhand, avatar_url)
+            await self.bot.db.pool.execute(query, str(discord_id), guild_id, ingame_name, gear_score, guild_class, main_hand, offhand, avatar_url, game_capture)
             return True
         except Exception as e:
             logger.error(f"Database error (add_member_db): {e}")
@@ -127,31 +129,41 @@ class GuildMemberGear(commands.Cog):
         gear_score="Your current gear score",
         guild_class="Choose your class",
         main_hand="Main weapon",
-        offhand="Offhand weapon"
+        offhand="Offhand weapon",
+        game_capture="(Optional) Upload a game capture image"
     )
-    async def add_member(self, interaction: discord.Interaction, ingame_name: str, gear_score: int,
-                         guild_class: str, main_hand: str, offhand: str):
-        if main_hand not in VALID_WEAPONS:
-            await interaction.response.send_message(
-                f"Invalid main weapon! Choose from: {', '.join(VALID_WEAPONS)}", ephemeral=True
-            )
-            return
-        if offhand not in VALID_WEAPONS:
-            await interaction.response.send_message(
-                f"Invalid offhand weapon! Choose from: {', '.join(VALID_WEAPONS)}", ephemeral=True
-            )
-            return
-
-        valid_classes = ["Healer", "DPS", "Tank"]
-        if guild_class not in valid_classes:
-            await interaction.response.send_message(
-                f"Invalid class! Choose from: {', '.join(valid_classes)} ", ephemeral=True
-            )
-            return
-
+    @app_commands.choices(
+        guild_class=[
+            app_commands.Choice(name="Healer", value="Healer"),
+            app_commands.Choice(name="DPS", value="DPS"),
+            app_commands.Choice(name="Tank", value="Tank"),
+        ],
+        main_hand=[app_commands.Choice(name=w, value=w) for w in VALID_WEAPONS],
+        offhand=[app_commands.Choice(name=w, value=w) for w in VALID_WEAPONS],
+    )
+    async def add_member(
+        self,
+        interaction: discord.Interaction,
+        ingame_name: str,
+        gear_score: int,
+        guild_class: str,
+        main_hand: str,
+        offhand: str,
+        game_capture: discord.Attachment = None
+    ):
         guild_id = str(interaction.guild.id)
         avatar_url = interaction.user.display_avatar.url
-        success = await self.add_member_db(interaction.user.id, guild_id, ingame_name, gear_score, guild_class, main_hand, offhand, avatar_url)
+        success = await self.add_member_db(
+            interaction.user.id,
+            guild_id,
+            ingame_name,
+            gear_score,
+            guild_class,
+            main_hand,
+            offhand,
+            avatar_url,
+            game_capture.url if game_capture else None
+        )
         if success:
             await interaction.response.send_message("Your guild member information has been successfully added/updated.", ephemeral=True)
         else:
@@ -177,6 +189,7 @@ class GuildMemberGear(commands.Cog):
                 embed.add_field(name="Class", value=member['class'])
                 embed.add_field(name="Main", value=member['main_hand'])
                 embed.add_field(name="Offhand", value=member['offhand'])
+                embed.add_field(name="Game Capture", value=member['game_capture'])
                 if member.get('avatar'):
                     embed.set_thumbnail(url=member['avatar'])
                 await interaction.response.send_message(embed=embed)

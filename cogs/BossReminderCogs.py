@@ -7,7 +7,7 @@ import os
 import asyncio
 
 
-
+# @Class 
 class BossReminderCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
