@@ -7,7 +7,7 @@ import logging
 
 # List of valid weapons
 VALID_WEAPONS = [
-    "Staff", "Dagger", "SwordAndShield", "Greatsword", "Long Bow", "Crossbow", "WandAndTome",
+    "Staff", "Daggers", "SnS", "Greatsword", "Long Bow", "Crossbow", "Wand", "Spear",
 ]
 
 # Setup logging
