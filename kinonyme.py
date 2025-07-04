@@ -13,9 +13,8 @@ TEST_GUILD_ID = 1389539957265399939
 async def on_ready():
     print(f"Logged in as {bot.user}")
     try:
-        guild = discord.Object(id=TEST_GUILD_ID)
-        synced = await bot.tree.sync(guild=guild)
-        print(f"Synced {len(synced)} commands to test guild.")
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)} commands globally.")
     except Exception as e:
         print(f"Failed to sync commands: {e}")
 
