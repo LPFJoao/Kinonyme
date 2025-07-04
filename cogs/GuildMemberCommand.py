@@ -31,19 +31,15 @@ class PagedGuildMembersView(discord.ui.View):
         end = start + self.items_per_page
         page_members = self.members[start:end]
 
-        embed = discord.Embed(
-            title="📋 Guild Members",
-            color=discord.Color.purple()
-        )
-        embed.description = f"Page {self.current_page + 1} of {(len(self.members) - 1) // self.items_per_page + 1}"
-
         class_emojis = {
             "Healer": "💖💚",
             "DPS": "⚔️🏹",
             "Tank": "🛡️🚛"
         }
 
-        for member in page_members:
+        embeds = []
+        #Embed Predefined used in the next code
+        for idx, member in enumerate(page_members, start=1+start):
             emoji = class_emojis.get(member['class'], "❔")
             name = member['ingame_name']
             gear_score = member['gear_score']
@@ -51,32 +47,37 @@ class PagedGuildMembersView(discord.ui.View):
             main_hand = member['main_hand']
             offhand = member['offhand']
             game_capture = member["game_capture"]
-            value = (
-                f"**Gear Score:** {gear_score}\n"
-                f"**Class:** {emoji} {classe}\n"
-                f"**Main:** {main_hand} | **Offhand:** {offhand}"
+            embed = discord.Embed(
+                title=f"{emoji} {name}",
+                color=discord.Color.purple(),
+                description=(
+                    f"**Classe :** {emoji} {classe}\n"
+                    f"**Gear Score :** `{gear_score}`\n"
+                    f"**Main :** `{main_hand}` | **Offhand :** `{offhand}`\n"
+                )
             )
-            embed.add_field(name=f"{emoji} {name}", value=value, inline=False)
-            embed.add_field(name="Game Capture", value=member['game_capture'])
+            if game_capture:
+                embed.set_image(url=game_capture)
+            embed.set_footer(text=f"Page {self.current_page + 1} • Rang #{idx}")
+            embeds.append(embed)
 
-        embed.set_footer(text=f"Use the buttons to navigate pages.")
-        return embed, None
+        return embeds, None
 
     @discord.ui.button(label="Previous", style=discord.ButtonStyle.primary)
     async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.current_page > 0:
             self.current_page -= 1
             self.update_buttons()
-            embed, _ = self.get_page_content()
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            embeds, _ = self.get_page_content()
+            await interaction.response.edit_message(content=None, embeds=embeds, view=self)
 
     @discord.ui.button(label="Next", style=discord.ButtonStyle.primary)
     async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         if self.current_page < (len(self.members) - 1) // self.items_per_page:
             self.current_page += 1
             self.update_buttons()
-            embed, _ = self.get_page_content()
-            await interaction.response.edit_message(content=None, embed=embed, view=self)
+            embeds, _ = self.get_page_content()
+            await interaction.response.edit_message(content=None, embeds=embeds, view=self)
 
 class GuildMemberGear(commands.Cog):
     def __init__(self, bot):
@@ -202,8 +203,8 @@ class GuildMemberGear(commands.Cog):
             await interaction.response.send_message("No members found in the database.", ephemeral=True)
             return
         view = PagedGuildMembersView(members)
-        embed, _ = view.get_page_content()
-        await interaction.response.send_message(content=None, embed=embed, view=view)
+        embeds, _ = view.get_page_content()
+        await interaction.response.send_message(content=None, embeds=embeds, view=view)
 
     @app_commands.command(name="remove_member", description="Remove a guild member (server owner only).")
     @app_commands.describe(ingame_name="The in-game name of the member to remove.")
